@@ -26,19 +26,31 @@ class MyWindow(Gtk.ApplicationWindow):
 
     def __init__(self, app):
         Gtk.Window.__init__(self, title="Welcome to GNOME", application=app)
-        # y, sr = self.get_audio('filename')
+        y, sr = self.get_audio('filename')
         # plt.figure()
         # plt.subplot(3, 1, 1)
+        self.set_default_size(600, 400)
         f = Figure(figsize=(5, 5), dpi=100)
         # ax = mplfigure.add_subplot(311)
-        # librosa.display.waveplot(y, sr=sr)
-        a = f.add_subplot(111)
+        ax1 = f.add_subplot(212)
+        ax1.margin = (2, 2)
+        ax1.set_title('One')
         t = arange(0.0, 3.0, 0.01)
         s = sin(2*pi*t)
-        a.plot(t, s)
+        ax1.plot(t, s)
+        ax2 = f.add_subplot(211)
+        ax2.margin = (2, 2)
+        ax2.set_title('Two')
+        librosa.display.waveplot(y, sr=sr, ax=ax2)
+        import ipdb; ipdb.set_trace()
+        # ax2.plot()
+        # ax2.add_collection(librosa.display.waveplot(y, sr=sr))
+
         sw = Gtk.ScrolledWindow()
         import ipdb; ipdb.set_trace()
         self.add(sw)
+        # A scrolled window border goes outside the scrollbars and viewport
+        sw.set_border_width(10)
 
         # f = Figure(figsize=(5, 5), dpi=100)
         canvas = FigureCanvas(f)  # a gtk.DrawingArea
