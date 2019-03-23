@@ -31,6 +31,7 @@ class DraggableRectangle:
     def on_motion(self, event):
         'on motion we will move the rect if the mouse is over us'
         if self.press is None: return
+        import ipdb; ipdb.set_trace()
         if event.inaxes != self.rect.axes: return
         x0, y0, xpress, ypress = self.press
         dx = event.xdata - xpress
@@ -54,10 +55,10 @@ class DraggableRectangle:
         self.rect.figure.canvas.mpl_disconnect(self.cidrelease)
         self.rect.figure.canvas.mpl_disconnect(self.cidmotion)
 
-# fig = plt.figure()
-fig = Figure(figsize=(5, 5), dpi=100)
+fig = plt.figure()
+# fig = Figure(figsize=(5, 5), dpi=100)
 # ax = mplfigure.add_subplot(311)
-canvas = FigureCanvas(fig)
+# canvas = FigureCanvas(fig)
 
 ax = fig.add_subplot(111)
 rects = ax.bar(range(10), 20*np.random.rand(10))
