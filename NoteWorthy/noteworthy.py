@@ -17,8 +17,8 @@ from trepan.api import debug
 class Cursor(object):
     def __init__(self, ax):
         self.ax = ax
-        self.lx = ax.axhline(color='k')  # the horiz line
-        self.ly = ax.axvline(color='k')  # the vert line
+        #self.lx = ax.axhline(color='k')  # the horiz line
+        self.ly = ax.axvline(color='k', alpha=0.2)  # the vert line
 
         # text location in axes coords
         self.txt = ax.text(0.7, 0.9, '', transform=ax.transAxes)
@@ -37,7 +37,7 @@ class Cursor(object):
 
         x, y = event.xdata, event.ydata
         # update the line positions
-        self.lx.set_ydata(y)
+        # self.lx.set_ydata(y)
         self.ly.set_xdata(x)
 
         self.txt.set_text('x=%1.2f, y=%1.2f' % (x, y))
@@ -55,12 +55,6 @@ class MyWindow(Gtk.ApplicationWindow):
         audio, sr = librosa.load(audio_file, sr=44100, mono=True, offset=5.0, duration=5.0)
         return audio, sr
 
-    # def onclick(self, event):
-        # self.cursor.mouse_move(event)
-        # print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
-            # ('double' if event.dblclick else 'single', event.button,
-            # event.x, event.y, event.xdata, event.ydata))
-
     def __init__(self, app):
         Gtk.Window.__init__(self, title="Welcome to GNOME", application=app)
         y, sr = self.get_audio('filename')
@@ -71,48 +65,10 @@ class MyWindow(Gtk.ApplicationWindow):
         self.add(canvas)
         self.press = None
 
-        # {{{def onclick(event):
-            # # 'on button press we will see if the mouse is over us and store some data'
-            # if event.inaxes != self.ax2.axes: return
-
-            # print('%s click_init: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
-                # ('double' if event.dblclick else 'single', event.button,
-                # event.x, event.y, event.xdata, event.ydata))
-            # self.press = event.xdata, event.ydata
-            # # import ipdb; ipdb.set_trace()
-            # self.ax2.axes.axvline(event.xdata,color='k')
-            # old_xdata = event.xdata
-            # self.ax2.axes.figure.canvas.draw()
-            # self.ax2.figure.canvas.draw_idle()
-
-        # def on_release(event):
-            # print('%s release_init: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
-                # ('double' if event.dblclick else 'single', event.button,
-                # event.x, event.y, event.xdata, event.ydata))
-            # canvas.mpl_disconnect(self.cidmotion)
-            # self.press = None
-
-        # def on_motion(event):
-            # if self.press is None: return
-            # # import ipdb; ipdb.set_trace()
-            # if event.inaxes != self.ax2.axes: return
-            # print('%s move_init: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
-                # ('double' if event.dblclick else 'single', event.button,
-                # event.x, event.y, event.xdata, event.ydata))
-
-            # x, y = event.xdata, event.ydata
-            # # update the line positions
-            # self.cursor.lx.set_ydata(y)
-            # self.cursor.ly.set_xdata(x)
-
-            # self.cursor.txt.set_text('x=%1.2f, y=%1.2f' % (x, y))
-            # # import ipdb; ipdb.set_trace()
-            # self.ax2.axes.figure.canvas.draw()
-            #}}} self.ax2.figure.canvas.draw_idle()
-
         # cid = f.callbacks.connect('button_press_event', self.onclick)
         print (canvas)
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
+        # breakpoint()
         self.cidpress = canvas.mpl_connect('button_press_event', self.onclick)
         self.cidmotion = canvas.mpl_connect('motion_notify_event', self.on_motion)
         self.cidrelease = canvas.mpl_connect('button_release_event', self.on_release)
@@ -125,7 +81,7 @@ class MyWindow(Gtk.ApplicationWindow):
         self.ax2 = f.add_subplot(211)
         self.ax2.margin = (2, 2)
         self.ax2.set_title('Two')
-        self.ax2.set_facecolor('red')
+        #self.ax2.set_facecolor('red')
         # see https://librosa.github.io/librosa/generated/librosa.display.waveplot.html#librosa.display.waveplot
         librosa.display.waveplot(y, sr=sr, ax=self.ax2)
 
@@ -138,10 +94,10 @@ class MyWindow(Gtk.ApplicationWindow):
         # f = Figure(figsize=(5, 5), dpi=100)
         # canvas = FigureCanvas(f)  # a gtk.DrawingArea
         sw.add_with_viewport(canvas)
-        c = mpatches.Rectangle((0.5, 0.5), 1, 1, facecolor="green",
-                    edgecolor="red", linewidth=3, alpha=0.5)
+        # c = mpatches.Rectangle((0.5, 0.5), 1, 1, facecolor="green",
+                    # edgecolor="red", linewidth=3, alpha=0.5)
+        # self.ax2.add_patch(c)
         self.cursor = Cursor(self.ax2)
-        self.ax2.add_patch(c)
 
         print (canvas)
         import ipdb; ipdb.set_trace()
