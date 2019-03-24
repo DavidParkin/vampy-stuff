@@ -10,6 +10,7 @@ from numpy import arange, sin, pi
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
 import matplotlib.patches as mpatches
+from trepan.api import debug
 
 # a Gtk ApplicationWindow
 
@@ -28,6 +29,7 @@ class Cursor(object):
             return
         # if event.inaxes != self.ax2.axes: return
         print(event)
+        # debug()
         print('%s move_cursor: x=%d, y=%d, xdata=%f, ydata=%f' %
               ('double' if event.dblclick else 'single', 
                event.x, event.y, event.xdata, event.ydata))
@@ -39,6 +41,7 @@ class Cursor(object):
         self.ly.set_xdata(x)
 
         self.txt.set_text('x=%1.2f, y=%1.2f' % (x, y))
+        self.ax.figure.canvas.draw_idle()
 
 
 class MyWindow(Gtk.ApplicationWindow):
