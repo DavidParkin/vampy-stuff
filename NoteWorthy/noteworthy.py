@@ -97,16 +97,15 @@ class MyWindow(Gtk.ApplicationWindow):
         f = Figure(figsize=(5, 5), dpi=100)
         self.press = None
 
-        # cid = f.callbacks.connect('button_press_event', self.onclick)
-        # print (canvas)
-        # import ipdb; ipdb.set_trace()
-        # breakpoint()
+        'plot 1 place holder'
         ax1 = f.add_subplot(212)
         ax1.margin = (2, 2)
         ax1.set_title('One')
         t = arange(0.0, 3.0, 0.01)
         s = sin(2*pi*t)
         ax1.plot(t, s)
+
+        # plot 2 audio waveform
         self.ax2 = f.add_subplot(211)
         self.ax2.margin = (2, 2)
         self.ax2.set_title('Two')
@@ -115,13 +114,10 @@ class MyWindow(Gtk.ApplicationWindow):
         librosa.display.waveplot(y, sr=sr, ax=self.ax2)
 
         sw = Gtk.ScrolledWindow()
-        # import ipdb; ipdb.set_trace()
-        # self.add(sw)
         # A scrolled window border goes outside the scrollbars and viewport
         sw.set_border_width(10)
 
         canvas = FigureCanvas(f)
-        # self.add(canvas)
 
         # canvas = FigureCanvas(f)  # a gtk.DrawingArea
         sw.add_with_viewport(canvas)
@@ -133,12 +129,11 @@ class MyWindow(Gtk.ApplicationWindow):
         # self.ax2.add_patch(c)
         self.cursor = Cursor(self.ax2)
 
-        print (canvas)
-        # import ipdb; ipdb.set_trace()
         self.cidpress = canvas.mpl_connect('button_press_event',self. onclick)
         self.cidmotion = canvas.mpl_connect('motion_notify_event', self.cursor.mouse_move)
         self.cidrelease = canvas.mpl_connect('button_release_event', self.on_release)
 
+        # Screen content
         action_group = Gtk.ActionGroup("my_actions")
 
         self.add_file_menu_actions(action_group)
@@ -307,6 +302,7 @@ class MyApplication(Gtk.Application):
         # f = Figure(figsize=(5, 5), dpi=100)
         # canvas = FigureCanvas(f)  # a gtk.DrawingArea
         # win.add(canvas)
+        # win.do_stuff
         win.show_all()
 
     # start up the application
