@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
 import matplotlib.patches as mpatches
 from trepan.api import debug
-
+import vlc
 UI_INFO = """
 <ui>
   <menubar name='MenuBar'>
@@ -86,18 +86,21 @@ class MyWindow(Gtk.ApplicationWindow):
     # get file for analysis
     def get_audio(self, filename):
         #load audio with file
-        audio_file = '/home/David/Music/Video/Stitch/maj_min-E.wav'
-        audio, sr = librosa.load(audio_file, sr=44100, mono=True, offset=5.0, duration=5.0)
+        self.audio_file = '/home/David/Music/Video/Stitch/maj_min-E.wav'
+        audio, sr = librosa.load(self.audio_file, sr=44100, mono=True, offset=5.0, duration=5.0)
         return audio, sr
 
     def __init__(self, app):
         Gtk.Window.__init__(self, title="Welcome to GNOME", application=app)
-        y, sr = self.get_audio('filename')
+        self.y, self.sr = self.get_audio('filename')
         self.set_default_size(600, 400)
+        self.player_paused=False
+        self.is_player_active = False
+
+    def set_boxes_and_events(self):
+        'plot 1 place holder'
         f = Figure(figsize=(5, 5), dpi=100)
         self.press = None
-
-        'plot 1 place holder'
         ax1 = f.add_subplot(212)
         ax1.margin = (2, 2)
         ax1.set_title('One')
@@ -111,19 +114,17 @@ class MyWindow(Gtk.ApplicationWindow):
         self.ax2.set_title('Two')
         #self.ax2.set_facecolor('red')
         # see https://librosa.github.io/librosa/generated/librosa.display.waveplot.html#librosa.display.waveplot
-        librosa.display.waveplot(y, sr=sr, ax=self.ax2)
+        librosa.display.waveplot(self.y, sr=self.sr, ax=self.ax2)
 
         sw = Gtk.ScrolledWindow()
         # A scrolled window border goes outside the scrollbars and viewport
         sw.set_border_width(10)
 
-        canvas = FigureCanvas(f)
-
-        # canvas = FigureCanvas(f)  # a gtk.DrawingArea
+        canvas = FigureCanvas(f)  # a gtk.DrawingArea
         sw.add_with_viewport(canvas)
-        self.cidpress = canvas.mpl_connect('button_press_event', self.onclick)
-        self.cidmotion = canvas.mpl_connect('motion_notify_event', self.on_motion)
-        self.cidrelease = canvas.mpl_connect('button_release_event', self.on_release)
+        # self.cidpress = canvas.mpl_connect('button_press_event', self.onclick)
+        # self.cidmotion = canvas.mpl_connect('motion_notify_event', self.on_motion)
+        # self.cidrelease = canvas.mpl_connect('button_release_event', self.on_release)
         # c = mpatches.Rectangle((0.5, 0.5), 1, 1, facecolor="green",
                     # edgecolor="red", linewidth=3, alpha=0.5)
         # self.ax2.add_patch(c)
@@ -159,9 +160,84 @@ class MyWindow(Gtk.ApplicationWindow):
         eventbox.add(label)
 
         self.popup = uimanager.get_widget("/PopupMenu")
+        self.playback_button = Gtk.Button()
+        self.stop_button = Gtk.Button()
+        
+        self.play_image = Gtk.Image.new_from_icon_name(
+                "gtk-media-play",
+                Gtk.IconSize.MENU
+            )
+        self.pause_image = Gtk.Image.new_from_icon_name(
+                "gtk-media-pause",
+                Gtk.IconSize.MENU
+            )
+        self.stop_image = Gtk.Image.new_from_icon_name(
+                "gtk-media-stop",
+                Gtk.IconSize.MENU
+            )
+        
+        self.playback_button.set_image(self.play_image)
+        self.stop_button.set_image(self.stop_image)
+        
+        self.playback_button.connect("clicked", self.toggle_player_playback)
+        self.stop_button.connect("clicked", self.stop_player)
+        
+        self.draw_area = Gtk.DrawingArea()
+        self.draw_area.set_size_request(300,300)
+        
+        self.draw_area.connect("realize",self._realized)
+        
+        self.hbox = Gtk.Box(spacing=6)
+        self.hbox.pack_start(self.playback_button, True, True, 0)
+        self.hbox.pack_start(self.stop_button, True, True, 0)
+        
+        #self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        
+        box.pack_start(self.draw_area, True, True, 0)
+        box.pack_start(self.hbox, False, False, 0)        # add sw - all matplot stuff
         box.pack_start(sw, True, True, 0)
         self.add(box)
         #{{{ menu methods
+
+    def stop_player(self, widget, data=None):
+        self.player.stop()
+        self.is_player_active = False
+        self.playback_button.set_image(self.play_image)
+        
+    def toggle_player_playback(self, widget, data=None):
+
+        """
+        Handler for Player's Playback Button (Play/Pause).
+        """
+
+        if self.is_player_active == False and self.player_paused == False:
+            self.player.play()
+            self.playback_button.set_image(self.pause_image)
+            self.is_player_active = True
+
+        elif self.is_player_active == True and self.player_paused == True:
+            self.player.play()
+            self.playback_button.set_image(self.pause_image)
+            self.player_paused = False
+
+        elif self.is_player_active == True and self.player_paused == False:
+            self.player.pause()
+            self.playback_button.set_image(self.play_image)
+            self.player_paused = True
+        else:
+            pass
+        
+    def _realized(self, widget, data=None):
+        self.vlcInstance = vlc.Instance("--no-xlib")
+        self.player = self.vlcInstance.media_player_new()
+        self.player = vlc.MediaPlayer('/home/David/Music/Video/Stitch/maj_min-E.wav')
+        win_id = widget.get_window().get_xid()
+        self.player.set_xwindow(win_id)
+        #self.player.set_mrl(MRL)
+        self.player.play()
+        self.playback_button.set_image(self.pause_image)
+        self.is_player_active = True
+
     def add_file_menu_actions(self, action_group):
         action_filemenu = Gtk.Action("FileMenu", "File", None, None)
         action_group.add_action(action_filemenu)
@@ -303,6 +379,7 @@ class MyApplication(Gtk.Application):
         # canvas = FigureCanvas(f)  # a gtk.DrawingArea
         # win.add(canvas)
         # win.do_stuff
+        win.set_boxes_and_events()
         win.show_all()
 
     # start up the application
