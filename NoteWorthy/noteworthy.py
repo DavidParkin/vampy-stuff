@@ -323,6 +323,7 @@ class MyWindow(Gtk.ApplicationWindow):
             import ipdb; ipdb.set_trace()
             print("Open clicked")
             print("File selected: " + dialog.get_filename())
+            self.stop_player()
             audio_file = dialog.get_filename()
             mrl = "{}".format(audio_file)
             self.player = self.vlcInstance.media_player_new("--no-xlib")
