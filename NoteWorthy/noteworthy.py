@@ -21,6 +21,7 @@ UI_INFO = """
         <menuitem action='FileNewFoo' />
         <menuitem action='FileNewGoo' />
       </menu>
+      <menuitem action='FileOpen' />
       <separator />
       <menuitem action='FileQuit' />
     </menu>
@@ -83,6 +84,7 @@ class MyWindow(Gtk.ApplicationWindow):
     # constructor: the title is "Welcome to GNOME" and the window belongs
     # to the application app
     # cursor = None
+    audio_file = ""
     # get file for analysis
     def get_audio(self, filename):
         #load audio with file
@@ -229,9 +231,14 @@ class MyWindow(Gtk.ApplicationWindow):
         
     def _realized(self, widget, data=None):
         self.vlcInstance = vlc.Instance("--no-xlib")
-        self.player = self.vlcInstance.media_player_new()
+        self.player = self.vlcInstance.media_player_new("--no-xlib")
         self.player = vlc.MediaPlayer('/home/David/Music/Video/Stitch/maj_min-E.wav')
+        #self.player = vlc.MediaPlayer('/home/David/Music/Video/Stitch/maj_min-E.wav')
         win_id = widget.get_window().get_xid()
+        self.win_id = win_id
+        print(widget)
+        print(win_id)
+        import ipdb; ipdb.set_trace()
         self.player.set_xwindow(win_id)
         #self.player.set_mrl(MRL)
         self.player.play()
@@ -256,6 +263,10 @@ class MyWindow(Gtk.ApplicationWindow):
             ("FileNewGoo", None, "_New Goo", None, "Create new goo",
              self.on_menu_file_new_generic),
         ])
+
+        action_fileopen = Gtk.Action("FileOpen", None, None, Gtk.STOCK_OPEN)
+        action_fileopen.connect("activate", self.on_menu_file_open)
+        action_group.add_action(action_fileopen)
 
         action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
         action_filequit.connect("activate", self.on_menu_file_quit)
@@ -299,6 +310,58 @@ class MyWindow(Gtk.ApplicationWindow):
     def on_menu_file_new_generic(self, widget):
         print("A File|New menu item was selected.")
 
+    def on_menu_file_open(self, widget):
+        dialog = Gtk.FileChooserDialog("Please choose a file", self,
+            Gtk.FileChooserAction.OPEN,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+
+        self.add_filters(dialog)
+
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            import ipdb; ipdb.set_trace()
+            print("Open clicked")
+            print("File selected: " + dialog.get_filename())
+            audio_file = dialog.get_filename()
+            mrl = "{}".format(audio_file)
+            self.player = self.vlcInstance.media_player_new("--no-xlib")
+            self.player = vlc.MediaPlayer(audio_file)
+            # s ccelf.player.set_media(mrl)
+            win_id = dialog.get_window().get_xid()
+            print(dialog)
+            print(dialog.get_window())
+            print(win_id)
+            self.player.set_xwindow(self.win_id)
+
+            self.player.play()
+        elif response == Gtk.ResponseType.CANCEL:
+            print("Cancel clicked")
+        dialog.destroy()
+
+    def add_filters(self, dialog):
+
+        filter = Gtk.FileFilter()
+        filter.set_name("Music files")
+        filter.add_pattern("*.wav")
+        filter.add_pattern("*.mp3")
+        filter.add_pattern("*.mp4")
+        dialog.add_filter(filter)
+
+        filter_text = Gtk.FileFilter()
+        filter_text.set_name("Text files")
+        filter_text.add_mime_type("text/plain")
+        dialog.add_filter(filter_text)
+
+        filter_py = Gtk.FileFilter()
+        filter_py.set_name("Python files")
+        filter_py.add_pattern("text/x-python")
+        dialog.add_filter(filter_py)
+
+        filter_any = Gtk.FileFilter()
+        filter_any.set_name("Any files")
+        filter_any.add_pattern("*")
+        dialog.add_filter(filter_any)        
     def on_menu_file_quit(self, widget):
         Gtk.main_quit()
 
