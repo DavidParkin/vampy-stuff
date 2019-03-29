@@ -114,7 +114,6 @@ class MyWindow(Gtk.ApplicationWindow):
         self.ax2 = f.add_subplot(211)
         self.ax2.margin = (2, 2)
         self.ax2.set_title('Two')
-        #self.ax2.set_facecolor('red')
         # see https://librosa.github.io/librosa/generated/librosa.display.waveplot.html#librosa.display.waveplot
         librosa.display.waveplot(self.y, sr=self.sr, ax=self.ax2)
 
@@ -124,9 +123,6 @@ class MyWindow(Gtk.ApplicationWindow):
 
         canvas = FigureCanvas(f)  # a gtk.DrawingArea
         sw.add_with_viewport(canvas)
-        # self.cidpress = canvas.mpl_connect('button_press_event', self.onclick)
-        # self.cidmotion = canvas.mpl_connect('motion_notify_event', self.on_motion)
-        # self.cidrelease = canvas.mpl_connect('button_release_event', self.on_release)
         # c = mpatches.Rectangle((0.5, 0.5), 1, 1, facecolor="green",
                     # edgecolor="red", linewidth=3, alpha=0.5)
         # self.ax2.add_patch(c)
@@ -186,6 +182,8 @@ class MyWindow(Gtk.ApplicationWindow):
         
         self.draw_area = Gtk.DrawingArea()
         self.draw_area.set_size_request(300,300)
+
+        self.draw_area.modify_bg(Gtk.StateType.NORMAL, Gdk.Color(0, 0, 0))
         
         self.draw_area.connect("realize",self._realized)
         
@@ -236,11 +234,9 @@ class MyWindow(Gtk.ApplicationWindow):
         #self.player = vlc.MediaPlayer('/home/David/Music/Video/Stitch/maj_min-E.wav')
         win_id = widget.get_window().get_xid()
         self.win_id = win_id
-        print(widget)
-        print(win_id)
-        import ipdb; ipdb.set_trace()
+        # print(widget)
+        # print(win_id)
         self.player.set_xwindow(win_id)
-        #self.player.set_mrl(MRL)
         self.player.play()
         self.playback_button.set_image(self.pause_image)
         self.is_player_active = True
@@ -320,19 +316,12 @@ class MyWindow(Gtk.ApplicationWindow):
 
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            import ipdb; ipdb.set_trace()
-            print("Open clicked")
-            print("File selected: " + dialog.get_filename())
-            self.stop_player()
+            self.player.stop()
             audio_file = dialog.get_filename()
             mrl = "{}".format(audio_file)
             self.player = self.vlcInstance.media_player_new("--no-xlib")
             self.player = vlc.MediaPlayer(audio_file)
-            # s ccelf.player.set_media(mrl)
             win_id = dialog.get_window().get_xid()
-            print(dialog)
-            print(dialog.get_window())
-            print(win_id)
             self.player.set_xwindow(self.win_id)
 
             self.player.play()
