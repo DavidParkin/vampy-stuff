@@ -85,25 +85,28 @@ class MyWindow(Gtk.ApplicationWindow):
     # to the application app
     # cursor = None
     audio_file = ""
+    selection_start = 0
+    selection_end = 0
+    selecting = False
     # get file for analysis
     def get_audio(self, filename):
         #load audio with file
-        self.audio_file = '/home/David/Music/Video/Stitch/maj_min-E.wav'
+        self.audio_file = filename
         audio, sr = librosa.load(self.audio_file, sr=44100, mono=True, offset=5.0, duration=5.0)
         return audio, sr
 
     def __init__(self, app):
         Gtk.Window.__init__(self, title="Welcome to GNOME", application=app)
-        self.y, self.sr = self.get_audio('filename')
+        self.y, self.sr = self.get_audio('/home/David/Music/Video/Stitch/maj_min-E.wav')
         self.set_default_size(600, 400)
         self.player_paused=False
         self.is_player_active = False
 
     def set_boxes_and_events(self):
         'plot 1 place holder'
-        f = Figure(figsize=(5, 5), dpi=100)
+        figure = Figure(figsize=(5, 5), dpi=100)
         self.press = None
-        ax1 = f.add_subplot(212)
+        ax1 =figure.add_subplot(212)
         ax1.margin = (2, 2)
         ax1.set_title('One')
         t = arange(0.0, 3.0, 0.01)
@@ -111,7 +114,7 @@ class MyWindow(Gtk.ApplicationWindow):
         ax1.plot(t, s)
 
         # plot 2 audio waveform
-        self.ax2 = f.add_subplot(211)
+        self.ax2 =figure.add_subplot(211)
         self.ax2.margin = (2, 2)
         self.ax2.set_title('Two')
         # see https://librosa.github.io/librosa/generated/librosa.display.waveplot.html#librosa.display.waveplot
@@ -121,11 +124,8 @@ class MyWindow(Gtk.ApplicationWindow):
         # A scrolled window border goes outside the scrollbars and viewport
         sw.set_border_width(10)
 
-        canvas = FigureCanvas(f)  # a gtk.DrawingArea
+        canvas = FigureCanvas(figure)  # a gtk.DrawingArea
         sw.add_with_viewport(canvas)
-        # c = mpatches.Rectangle((0.5, 0.5), 1, 1, facecolor="green",
-                    # edgecolor="red", linewidth=3, alpha=0.5)
-        # self.ax2.add_patch(c)
         self.cursor = Cursor(self.ax2)
 
         self.cidpress = canvas.mpl_connect('button_press_event',self. onclick)
@@ -160,7 +160,8 @@ class MyWindow(Gtk.ApplicationWindow):
         self.popup = uimanager.get_widget("/PopupMenu")
         self.playback_button = Gtk.Button()
         self.stop_button = Gtk.Button()
-        
+        self.loop_button = Gtk.Button()
+
         self.play_image = Gtk.Image.new_from_icon_name(
                 "gtk-media-play",
                 Gtk.IconSize.MENU
@@ -173,26 +174,34 @@ class MyWindow(Gtk.ApplicationWindow):
                 "gtk-media-stop",
                 Gtk.IconSize.MENU
             )
-        
+
+        self.loop_image = Gtk.Image.new_from_icon_name(
+                "media-playlist-repeat",
+                Gtk.IconSize.MENU
+            )
+
         self.playback_button.set_image(self.play_image)
         self.stop_button.set_image(self.stop_image)
-        
+        self.loop_button.set_image(self.loop_image)
+
         self.playback_button.connect("clicked", self.toggle_player_playback)
         self.stop_button.connect("clicked", self.stop_player)
-        
+        self.loop_button.connect("clicked", self.loop_player)
+
         self.draw_area = Gtk.DrawingArea()
         self.draw_area.set_size_request(300,300)
 
         self.draw_area.modify_bg(Gtk.StateType.NORMAL, Gdk.Color(0, 0, 0))
-        
+
         self.draw_area.connect("realize",self._realized)
-        
+
         self.hbox = Gtk.Box(spacing=6)
         self.hbox.pack_start(self.playback_button, True, True, 0)
         self.hbox.pack_start(self.stop_button, True, True, 0)
-        
+        self.hbox.pack_start(self.loop_button, True, True, 0)
+
         #self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        
+
         box.pack_start(self.draw_area, True, True, 0)
         box.pack_start(self.hbox, False, False, 0)        # add sw - all matplot stuff
         box.pack_start(sw, True, True, 0)
@@ -203,7 +212,10 @@ class MyWindow(Gtk.ApplicationWindow):
         self.player.stop()
         self.is_player_active = False
         self.playback_button.set_image(self.play_image)
-        
+
+    def loop_player(self, widget, data=None):
+        self.is_looping = False
+
     def toggle_player_playback(self, widget, data=None):
 
         """
@@ -226,7 +238,7 @@ class MyWindow(Gtk.ApplicationWindow):
             self.player_paused = True
         else:
             pass
-        
+
     def _realized(self, widget, data=None):
         self.vlcInstance = vlc.Instance("--no-xlib")
         self.player = self.vlcInstance.media_player_new("--no-xlib")
@@ -318,7 +330,6 @@ class MyWindow(Gtk.ApplicationWindow):
         if response == Gtk.ResponseType.OK:
             self.player.stop()
             audio_file = dialog.get_filename()
-            mrl = "{}".format(audio_file)
             self.player = self.vlcInstance.media_player_new("--no-xlib")
             self.player = vlc.MediaPlayer(audio_file)
             win_id = dialog.get_window().get_xid()
@@ -403,8 +414,8 @@ class MyWindow(Gtk.ApplicationWindow):
             event.x, event.y, event.xdata, event.ydata))
 
         x, y = event.xdata, event.ydata
-        # update the line positions    
-        self.cursor.lx.set_ydata(y)
+        # update the line positions
+        # self.cursor.lx.set_ydata(y)
         import ipdb; ipdb.set_trace()
         self.cursor.ly.set_xdata(x)
 
@@ -428,10 +439,6 @@ class MyApplication(Gtk.Application):
         win = MyWindow(self)
         # show the window and all its content
         # this line could go in the constructor of MyWindow as well
-        # f = Figure(figsize=(5, 5), dpi=100)
-        # canvas = FigureCanvas(f)  # a gtk.DrawingArea
-        # win.add(canvas)
-        # win.do_stuff
         win.set_boxes_and_events()
         win.show_all()
 
@@ -445,3 +452,6 @@ class MyApplication(Gtk.Application):
 app = MyApplication()
 exit_status = app.run(sys.argv)
 sys.exit(exit_status)
+# c = mpatches.Rectangle((0.5, 0.5), 1, 1, facecolor="green",
+# edgecolor="red", linewidth=3, alpha=0.5)
+# self.ax2.add_patch(c)

@@ -28,7 +28,8 @@ def hz2midi(herz):
     return midi
 
 #load audio with file
-audio_file = '/home/David/Music/Video/Stitch/maj_min-E.wav'
+audio_file = '/home/David/Music/Video/Stitch/In The Mind of B.B. King_ The Thrill Is Gone Guitar Solo Lesson [360p].mp4'
+
 audio, sr = librosa.load(audio_file, sr=44100, mono=True, offset=5.0, duration=5.0)
 #collect silvet data
 params = {} # allow A3
